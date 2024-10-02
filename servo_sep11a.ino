@@ -1,67 +1,91 @@
 #include <Servo.h>
 
-Servo servo1;  // Cria um objeto Servo para o primeiro servo motor
+Servo servo1;
 Servo servo2;
 Servo servo3;
-Servo servo4;  // Cria um objeto Servo para o segundo servo motor
+Servo servo4;
+
+int umidadeSolo = 0;
+const int pinoSensor = A0; // Define the pin for the humidity sensor
+const int umidadeLimite = 1; // Define the humidity limit (adjust as needed)
+
+bool servosParados = false; // State variable to control servos
 
 void setup() {
-    servo1.attach(8);  // Associa o servo motor ao pino digital 8
+    servo1.attach(8);
     servo2.attach(9);
-    servo3.attach(13);  // Associa o servo motor ao pino digital 8
-    servo4.attach(12);  // Associa o servo motor ao pino digital 9
-    Serial.begin(9600); // Inicializa a comunicação serial
-    delay(1000);        // Espera 1 segundo para garantir a conexão serial
-    Serial.println("Sistema pronto. Envie comandos para controlar os servos.");
+    servo3.attach(10); // Adjust according to your setup
+    servo4.attach(11); // Adjust according to your setup
+    
+    Serial.begin(9600);
+    delay(1000);        
+    Serial.println("Sistema pronto. Envie 'stop' para a parada de emergência, 's' para parar os servos e 'p' para retomar.");
 }
 
 void loop() {
-    if (Serial.available() > 0) {  // Verifica se há dados disponíveis na porta serial
-        char command = Serial.read();  // Lê o caractere recebido
-        
-        // Imprime o caractere recebido para depuração
-        Serial.print("Comando recebido: ");
-        Serial.println(command);
-        
-        switch (command) {
-            case 'r':  // Se o caractere é 'r'
-                servo2.write(180);  // Move o servo2 para a posição 180 graus
-                servo1.write(180); 
-                servo3.write(180);  // Move o servo2 para a posição 180 graus
-                servo4.write(180);  // Move o servo1 para a posição 180 graus
-                Serial.println("Movendo para direita");  // Mensagem de depuração
-                break;
-
-            case 'l':  // Se o caractere é 'l'
-                servo2.write(0);  // Move o servo2 para a posição 0 graus
-                servo1.write(0);
-                servo3.write(0);  // Move o servo2 para a posição 180 graus
-                servo4.write(0);  // Move o servo1 para a posição 0 graus
-                Serial.println("Movendo para esquerda");  // Mensagem de depuração
-                break;
-
-            case 's':  // Se o caractere é 's'
-                servo2.write(90);  // Move o servo2 para a posição 90 graus
-                servo1.write(90);
-                servo3.write(90);  // Move o servo2 para a posição 180 graus
-                servo4.write(90);  // Move o servo1 para a posição 90 graus
-                Serial.println("Servos em posição neutra");  // Mensagem de depuração
-                delay(60);  // Aguarda 60 segundos
-                break;
-
-            case 'p':  // Se o caractere é 'p'
-                servo2.write(180);  // Move o servo2 para a posição 90 graus
-                servo1.write(180);
-                servo3.write(180);  // Move o servo2 para a posição 180 graus
-                servo4.write(180);  // Ajuste conforme necessário
-                Serial.println("Servos retornando à posição inicial (90 graus)");  // Mensagem de depuração
-                break;
-
-            default:
-                Serial.println("Comando inválido. Use 'r', 'l', 's', ou 'p'");  // Mensagem de erro para comando inválido
-                break;
+    // Check for commands via Serial
+    if (Serial.available() > 0) {
+        String comando = Serial.readStringUntil('\n'); // Read the command until newline
+        if (comando.equalsIgnoreCase("s")) { // Check if the command is "stop"
+            Serial.println("Servos parados!");
+            pararServos(); // Stop servos
+            servosParados = true; // Update state
+            return; // Exit the loop
+        } else if (comando.equalsIgnoreCase("p")) { // Check if the command is "p"
+            Serial.println("Servos retomados!");
+            servosParados = false; // Update state to allow servos to operate
         }
-        Serial.flush();  // Garante que todos os dados sejam enviados para o monitor serial
-        delay(500);  // Adiciona um pequeno atraso para estabilizar
     }
+    if (servosParados) {
+        return; // Skip the rest of the loop if servos are stopped
+    }
+
+    // Measure soil humidity
+    umidadeSolo = analogRead(pinoSensor);
+    umidadeSolo = map(umidadeSolo, 1023, 0, 0, 100);
+    
+    Serial.print("Umidade do solo: ");
+    Serial.println(umidadeSolo);
+
+    // Check if humidity is below the limit
+    if (umidadeSolo < umidadeLimite) {
+        // If humidity is low, move servos to the left
+        Serial.println("Umidade baixa, movendo para a esquerda.");
+        moverServos(0); // Move to 0 degrees
+    } else {
+        // If humidity is adequate, move servos to the right
+        Serial.println("Umidade adequada, movendo para a direita.");
+        moverServos(180); // Move to 180 degrees
+    }
+
+    // Set servos to neutral position after movement
+    servo1.write(90);
+    servo2.write(90);
+    servo3.write(90);
+    servo4.write(90);
+    delay(1000); // Wait 1 second before the next reading
+}
+
+void moverServos(int angulo) {
+    // Move servos to the specified angle
+    servo1.write(angulo);
+    servo2.write(angulo);
+    servo3.write(angulo);
+    servo4.write(angulo);
+    delay(10000); // Wait for 10 seconds
+
+    // Stop servos at 90 degrees for 1 second
+    servo1.write(90);
+    servo2.write(90);
+    servo3.write(90);
+    servo4.write(90);
+    delay(1000); // Wait for 1 second
+}
+
+void pararServos() {
+    // Stop all servos by setting them to neutral position
+    servo1.write(90);
+    servo2.write(90);
+    servo3.write(90);
+    servo4.write(90);
 }
