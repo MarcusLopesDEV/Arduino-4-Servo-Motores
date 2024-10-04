@@ -51,11 +51,11 @@ void loop() {
     if (umidadeSolo < umidadeLimite) {
         // If humidity is low, move servos to the left
         Serial.println("Umidade baixa, movendo para a esquerda.");
-        moverServos(0); // Move to 0 degrees
+        moverServos(180); // Move to 0 degrees
     } else {
         // If humidity is adequate, move servos to the right
         Serial.println("Umidade adequada, movendo para a direita.");
-        moverServos(180); // Move to 180 degrees
+        moverServos(0); // Move to 180 degrees
     }
 
     // Set servos to neutral position after movement
