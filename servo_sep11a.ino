@@ -37,33 +37,28 @@ void loop() {
         }
     }
     if (servosParados) {
-        return; // Skip the rest of the loop if servos are stopped
+        return; 
     }
-
-    // Measure soil humidity
     umidadeSolo = analogRead(pinoSensor);
     umidadeSolo = map(umidadeSolo, 1023, 0, 0, 100);
     
     Serial.print("Umidade do solo: ");
     Serial.println(umidadeSolo);
-
-    // Check if humidity is below the limit
+    
     if (umidadeSolo < umidadeLimite) {
         // If humidity is low, move servos to the left
         Serial.println("Umidade baixa, movendo para a esquerda.");
         moverServos(180); // Move to 0 degrees
     } else {
-        // If humidity is adequate, move servos to the right
+       
         Serial.println("Umidade adequada, movendo para a direita.");
         moverServos(0); // Move to 180 degrees
     }
-
-    // Set servos to neutral position after movement
     servo1.write(90);
     servo2.write(90);
     servo3.write(90);
     servo4.write(90);
-    delay(1000); // Wait 1 second before the next reading
+    delay(1000);
 }
 
 void moverServos(int angulo) {
