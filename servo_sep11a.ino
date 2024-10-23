@@ -7,7 +7,7 @@ Servo servo4;
 
 int umidadeSolo = 0;
 const int pinoSensor = A0; // Define the pin for the humidity sensor
-const int umidadeLimite = 1; // Define the humidity limit (adjust as needed)
+const int umidadeLimite = 37; // Define the humidity limit (adjust as needed)
 
 bool servosParados = false; // State variable to control servos
 
@@ -19,7 +19,7 @@ void setup() {
     
     Serial.begin(9600);
     delay(1000);        
-    Serial.println("Sistema pronto. Envie 'stop' para a parada de emergência, 's' para parar os servos e 'p' para mover para a esquerda.");
+    Serial.println("Sistema pronto. Envie 's' para parar os servos e 'p' para descer a casa.");
 }
 
 void loop() {
@@ -32,8 +32,8 @@ void loop() {
             servosParados = true; // Update state
             return; // Exit the loop
         } else if (comando.equalsIgnoreCase("p")) { // Check if the command is "p"
-            Serial.println("Movendo para a esquerda.");
-            moverServos(180); // Move to 180 degrees
+            Serial.println("Descendo a casa.");
+            moverServos(0); // Move to 180 degrees
             return; // Exit the loop after moving
         }
     }
@@ -52,11 +52,11 @@ void loop() {
     // Check if humidity is below the limit
     if (umidadeSolo < umidadeLimite) {
         // If humidity is low, move servos to the left
-        Serial.println("Umidade baixa, movendo para a esquerda.");
-        moverServos(0); // Move to 180 degrees
+        Serial.println("Umidade Adequada, Pressione P para descer ");
+        moverServos(90); // Move to 180 degrees
     } else {
         // If humidity is adequate, move servos to the right
-        Serial.println("Umidade baixa, movendo para a direita.");
+        Serial.println("Umidade baixa, Casa subindo.");
         moverServos(180); // Move to 0 degrees
     }
 
@@ -74,14 +74,7 @@ void moverServos(int angulo) {
     servo2.write(angulo);
     servo3.write(angulo);
     servo4.write(angulo);
-    delay(10000); // Wait for 10 seconds
-
-    // Stop servos at 90 degrees for 1 second
-    servo1.write(90);
-    servo2.write(90);
-    servo3.write(90);
-    servo4.write(90);
-    delay(1000); // Wait for 1 second
+    delay(11000); // Wait for 10 seconds
 }
 void pararServos() {
     // Stop all servos by setting them to neutral position
